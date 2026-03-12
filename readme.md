@@ -447,6 +447,7 @@ curl http://localhost:8000/v1/videos \
 |  | `blocked_parallel_enabled` | 并行补偿开关 | 是否启用并行补偿（启用时优先使用不同 token）。 | `true` |
 | **imagine_fast** | `n` | 生成数量 | 仅对 grok-imagine-1.0-fast 生效。 | `1` |
 |  | `size` | 图片尺寸 | `1280x720` / `720x1280` / `1792x1024` / `1024x1792` / `1024x1024` | `1024x1024` |
+
 |  | `response_format` | 响应格式 | `url` / `b64_json` / `base64` | `url` |
 | **video** | `concurrent` | 并发上限 | Reverse 接口并发上限。 | `100` |
 |  | `timeout` | 请求超时 | Reverse 接口超时时间（秒）。 | `60` |
