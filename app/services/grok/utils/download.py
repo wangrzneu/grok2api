@@ -21,6 +21,7 @@ from app.core.exceptions import AppException
 from app.services.reverse.assets_download import AssetsDownloadReverse
 from app.services.reverse.utils.session import ResettableSession
 from app.services.grok.utils.locks import _get_download_semaphore, _file_lock
+from app.services.grok.utils.s3 import upload_to_s3
 
 
 class DownloadService:
@@ -65,6 +66,17 @@ class DownloadService:
                 path_or_url = f"/{path_or_url}"
             path = path_or_url
             asset_url = f"https://assets.grok.com{path_or_url}"
+
+        # S3 upload: download then upload to S3
+        if get_config("s3.enabled"):
+            cache_path, mime = await self.download_file(asset_url, token, media_type)
+            if cache_path and cache_path.exists():
+                filename = cache_path.name
+                ext = cache_path.suffix.lstrip(".")
+                raw_bytes = cache_path.read_bytes()
+                s3_url = await upload_to_s3(raw_bytes, filename, ext=ext)
+                if s3_url:
+                    return s3_url
 
         app_url = get_config("app.app_url")
         if app_url:

@@ -161,6 +161,16 @@ class VideoExtendService:
         }
 
         # Direct app-chat call for extension path (no auto step splitting).
+        # Resolve per-token proxy
+        extend_proxy = None
+        try:
+            from app.services.token.manager import TokenManager
+            instance = TokenManager._instance
+            if instance:
+                extend_proxy = instance.get_proxy_for_token(token)
+        except Exception:
+            pass
+
         session = ResettableSession()
         response = await AppChatReverse.request(
             session,
@@ -169,6 +179,7 @@ class VideoExtendService:
             model="grok-3",
             tool_overrides={"videoGen": True},
             model_config_override=model_config_override,
+            token_proxy_url=extend_proxy,
         )
 
         result = await VideoCollectProcessor(VIDEO_MODEL_ID, token).process(response)

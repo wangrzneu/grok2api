@@ -119,9 +119,10 @@ class AppChatReverse:
         file_attachments: List[str] = None,
         tool_overrides: Dict[str, Any] = None,
         model_config_override: Dict[str, Any] = None,
+        token_proxy_url: Optional[str] = None,
     ) -> Any:
         """Send app chat request to Grok.
-        
+
         Args:
             session: AsyncSession, the session to use for the request.
             token: str, the SSO token.
@@ -131,13 +132,14 @@ class AppChatReverse:
             file_attachments: List[str], the file attachments to send.
             tool_overrides: Dict[str, Any], the tool overrides to use.
             model_config_override: Dict[str, Any], the model config override to use.
+            token_proxy_url: Optional[str], per-token proxy URL override.
 
         Returns:
             Any: The response from the request.
         """
         try:
-            # Get proxies
-            base_proxy = get_config("proxy.base_proxy_url")
+            # Get proxies (per-token proxy takes priority over global)
+            base_proxy = token_proxy_url or get_config("proxy.base_proxy_url")
             proxy = None
             proxies = None
             if base_proxy:

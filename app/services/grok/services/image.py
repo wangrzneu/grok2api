@@ -20,6 +20,7 @@ from app.services.grok.utils.process import BaseProcessor
 from app.services.grok.utils.retry import pick_token, rate_limited
 from app.services.grok.utils.response import make_response_id, make_chat_chunk, wrap_image_content
 from app.services.grok.utils.stream import wrap_stream_with_usage
+from app.services.grok.utils.s3 import upload_to_s3
 from app.services.token import EffortType
 from app.services.reverse.ws_imagine import ImagineWebSocketReverse
 
@@ -197,6 +198,7 @@ class ImageGenerationService:
             enable_nsfw = bool(get_config("image.nsfw"))
         stream_retries = int(get_config("image.blocked_parallel_attempts") or 5) + 1
         stream_retries = max(1, min(stream_retries, 10))
+        token_proxy_url = token_mgr.get_proxy_for_token(token) if hasattr(token_mgr, 'get_proxy_for_token') else None
         upstream = image_service.stream(
             token=token,
             prompt=prompt,
@@ -204,6 +206,7 @@ class ImageGenerationService:
             n=n,
             enable_nsfw=enable_nsfw,
             max_retries=stream_retries,
+            token_proxy_url=token_proxy_url,
         )
         processor = ImageWSStreamProcessor(
             model_info.model_id,
@@ -245,6 +248,7 @@ class ImageGenerationService:
         async def _fetch_batch(call_target: int, call_token: str):
             stream_retries = int(get_config("image.blocked_parallel_attempts") or 5) + 1
             stream_retries = max(1, min(stream_retries, 10))
+            batch_proxy = token_mgr.get_proxy_for_token(call_token) if hasattr(token_mgr, 'get_proxy_for_token') else None
             upstream = image_service.stream(
                 token=call_token,
                 prompt=prompt,
@@ -252,6 +256,7 @@ class ImageGenerationService:
                 n=call_target,
                 enable_nsfw=enable_nsfw,
                 max_retries=stream_retries,
+                token_proxy_url=batch_proxy,
             )
             processor = ImageWSCollectProcessor(
                 model_info.model_id,
@@ -462,14 +467,22 @@ class ImageWSBaseProcessor(BaseProcessor):
         data = self._strip_base64(blob)
         if not data:
             return ""
-        image_dir = self._ensure_image_dir()
         ext = ext or self._guess_ext(blob)
         filename = self._filename(image_id, is_final, ext=ext)
+        raw_bytes = base64.b64decode(data)
+
+        # Try S3 upload first
+        s3_url = await upload_to_s3(raw_bytes, filename, ext=ext)
+        if s3_url:
+            return s3_url
+
+        # Fallback to local file storage
+        image_dir = self._ensure_image_dir()
         filepath = image_dir / filename
 
         def _write_file():
             with open(filepath, "wb") as f:
-                f.write(base64.b64decode(data))
+                f.write(raw_bytes)
 
         await asyncio.to_thread(_write_file)
         return self._build_file_url(filename)

@@ -262,6 +262,7 @@ class GrokChatService:
         file_attachments: List[str] = None,
         tool_overrides: Dict[str, Any] = None,
         model_config_override: Dict[str, Any] = None,
+        token_proxy_url: str = None,
     ):
         """发送聊天请求"""
         if stream is None:
@@ -285,6 +286,7 @@ class GrokChatService:
                 file_attachments=file_attachments,
                 tool_overrides=tool_overrides,
                 model_config_override=model_config_override,
+                token_proxy_url=token_proxy_url,
             )
             logger.info(f"Chat connected: model={model}, stream={stream}")
         except Exception:
@@ -316,6 +318,7 @@ class GrokChatService:
         tools: List[Dict[str, Any]] = None,
         tool_choice: Any = None,
         parallel_tool_calls: bool = True,
+        token_proxy_url: str = None,
     ):
         """OpenAI 兼容接口"""
         model_info = ModelService.get(model)
@@ -371,6 +374,7 @@ class GrokChatService:
             file_attachments=all_attachments,
             tool_overrides=None,
             model_config_override=model_config_override,
+            token_proxy_url=token_proxy_url,
         )
 
         return response, stream, model
@@ -425,6 +429,7 @@ class ChatService:
 
             try:
                 # 请求 Grok
+                token_proxy_url = token_mgr.get_proxy_for_token(token)
                 service = GrokChatService()
                 response, _, model_name = await service.chat_openai(
                     token,
@@ -437,6 +442,7 @@ class ChatService:
                     tools=tools,
                     tool_choice=tool_choice,
                     parallel_tool_calls=parallel_tool_calls,
+                    token_proxy_url=token_proxy_url,
                 )
 
                 # 处理响应

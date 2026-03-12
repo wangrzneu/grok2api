@@ -516,14 +516,28 @@ def _new_session() -> ResettableSession:
     return ResettableSession()
 
 
+def _resolve_token_proxy(token: str) -> Optional[str]:
+    """Resolve per-token proxy URL from token manager (best-effort)."""
+    try:
+        from app.services.token.manager import TokenManager
+        instance = TokenManager._instance
+        if instance:
+            return instance.get_proxy_for_token(token)
+    except Exception:
+        pass
+    return None
+
+
 async def _request_round_stream(
     *,
     token: str,
     message: str,
     model_config_override: Dict[str, Any],
+    token_proxy_url: str = None,
 ) -> AsyncGenerator[bytes, None]:
     async def _stream():
         session = _new_session()
+        proxy = token_proxy_url or _resolve_token_proxy(token)
         try:
             async with _get_video_semaphore():
                 stream_response = await AppChatReverse.request(
@@ -533,6 +547,7 @@ async def _request_round_stream(
                     model=_APP_CHAT_MODEL,
                     tool_overrides={"videoGen": True},
                     model_config_override=model_config_override,
+                    token_proxy_url=proxy,
                 )
                 async for line in stream_response:
                     yield line

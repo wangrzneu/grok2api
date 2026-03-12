@@ -99,6 +99,7 @@ class ImagineWebSocketReverse:
         n: int = 1,
         enable_nsfw: bool = True,
         max_retries: Optional[int] = None,
+        token_proxy_url: Optional[str] = None,
     ) -> AsyncGenerator[Dict[str, object], None]:
         retries = max(1, max_retries if max_retries is not None else 1)
         parallel_enabled = bool(get_config("image.blocked_parallel_enabled", True))
@@ -109,7 +110,8 @@ class ImagineWebSocketReverse:
         async def _collect_once() -> list[Dict[str, object]]:
             items: list[Dict[str, object]] = []
             async for item in self._stream_once(
-                token, prompt, aspect_ratio, n, enable_nsfw
+                token, prompt, aspect_ratio, n, enable_nsfw,
+                token_proxy_url=token_proxy_url,
             ):
                 items.append(item)
             return items
@@ -175,6 +177,7 @@ class ImagineWebSocketReverse:
         aspect_ratio: str,
         n: int,
         enable_nsfw: bool,
+        token_proxy_url: Optional[str] = None,
     ) -> AsyncGenerator[Dict[str, object], None]:
         request_id = str(uuid.uuid4())
         headers = build_ws_headers(token=token)
@@ -196,6 +199,7 @@ class ImagineWebSocketReverse:
                     "heartbeat": 20,
                     "receive_timeout": stream_timeout,
                 },
+                proxy_url_override=token_proxy_url,
             )
         except Exception as e:
             status = getattr(e, "status", None)

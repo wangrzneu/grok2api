@@ -100,19 +100,21 @@ class WebSocketClient:
         headers: Optional[Mapping[str, str]] = None,
         timeout: Optional[float] = None,
         ws_kwargs: Optional[Mapping[str, object]] = None,
+        proxy_url_override: Optional[str] = None,
     ) -> WebSocketConnection:
         """Connect to the WebSocket.
-        
+
         Args:
             url: str, the URL to connect to.
             headers: Optional[Mapping[str, str]], the headers to send. Defaults to None.
             ws_kwargs: Optional[Mapping[str, object]], extra ws_connect kwargs. Defaults to None.
+            proxy_url_override: Optional[str], per-request proxy URL override. Defaults to None.
 
         Returns:
             WebSocketConnection: The WebSocket connection.
         """
-        # Resolve proxy dynamically from config if not overridden
-        proxy_url = self._proxy_override or get_config("proxy.base_proxy_url")
+        # Resolve proxy: per-request override > instance override > global config
+        proxy_url = proxy_url_override or self._proxy_override or get_config("proxy.base_proxy_url")
         connector, resolved_proxy = resolve_proxy(proxy_url, self._ssl_context)
         logger.debug(f"WebSocket connect: proxy_url={proxy_url}, resolved_proxy={resolved_proxy}, connector={type(connector).__name__}")
 

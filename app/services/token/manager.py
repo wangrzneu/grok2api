@@ -452,6 +452,22 @@ class TokenManager:
                 return pool_name
         return None
 
+    def get_proxy_for_token(self, token_str: str) -> Optional[str]:
+        """Get per-token proxy URL if configured.
+
+        Args:
+            token_str: Token string (with or without sso= prefix).
+
+        Returns:
+            The proxy URL for this token, or None to use global proxy.
+        """
+        raw_token = token_str.replace("sso=", "")
+        for pool in self.pools.values():
+            info = pool.get(raw_token)
+            if info:
+                return info.proxy_url
+        return None
+
     async def consume(
         self, token_str: str, effort: EffortType = EffortType.LOW
     ) -> bool:

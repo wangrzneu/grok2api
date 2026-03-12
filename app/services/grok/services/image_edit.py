@@ -108,6 +108,7 @@ class ImageEditService:
                 tool_overrides = {"imageGen": True}
 
                 if stream:
+                    edit_proxy = token_mgr.get_proxy_for_token(current_token) if hasattr(token_mgr, 'get_proxy_for_token') else None
                     response = await GrokChatService().chat(
                         token=current_token,
                         message=prompt,
@@ -116,6 +117,7 @@ class ImageEditService:
                         stream=True,
                         tool_overrides=tool_overrides,
                         model_config_override=model_config_override,
+                        token_proxy_url=edit_proxy,
                     )
                     processor = ImageStreamProcessor(
                         model_info.model_id,
@@ -142,6 +144,7 @@ class ImageEditService:
                     response_format=response_format,
                     tool_overrides=tool_overrides,
                     model_config_override=model_config_override,
+                    token_mgr=token_mgr,
                 )
                 try:
                     effort = (
@@ -238,10 +241,12 @@ class ImageEditService:
         response_format: str,
         tool_overrides: dict,
         model_config_override: dict,
+        token_mgr: Any = None,
     ) -> List[str]:
         calls_needed = (n + 1) // 2
 
         async def _call_edit():
+            collect_proxy = token_mgr.get_proxy_for_token(token) if token_mgr and hasattr(token_mgr, 'get_proxy_for_token') else None
             response = await GrokChatService().chat(
                 token=token,
                 message=prompt,
@@ -250,6 +255,7 @@ class ImageEditService:
                 stream=True,
                 tool_overrides=tool_overrides,
                 model_config_override=model_config_override,
+                token_proxy_url=collect_proxy,
             )
             processor = ImageCollectProcessor(
                 model_info.model_id, token, response_format=response_format
