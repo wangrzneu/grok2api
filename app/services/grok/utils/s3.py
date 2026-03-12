@@ -12,14 +12,7 @@ from app.core.logger import logger
 
 
 def _is_s3_enabled() -> bool:
-    if not get_config("s3.enabled"):
-        return False
-    try:
-        import boto3  # noqa: F401
-        return True
-    except ImportError:
-        logger.warning("S3 enabled in config but boto3 is not installed. Install with: pip install boto3")
-        return False
+    return bool(get_config("s3.enabled"))
 
 
 def _get_s3_client():
