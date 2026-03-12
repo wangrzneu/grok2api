@@ -300,6 +300,11 @@
           <label class="modal-label mb-1 block" data-i18n="token.editNote">备注</label>
           <input type="text" id="edit-note" class="geist-input" placeholder="可选备注" data-i18n-placeholder="token.editNotePlaceholder" maxlength="50">
         </div>
+        <div>
+          <label class="modal-label mb-1 block" data-i18n="token.editProxyUrl">代理地址</label>
+          <input type="text" id="edit-proxy-url" class="geist-input font-mono" placeholder="http://host:port 或 socks5://host:port" data-i18n-placeholder="token.editProxyUrlPlaceholder">
+          <p class="text-xs text-[var(--accents-4)] mt-1" data-i18n="token.editProxyUrlDesc">可选，为该 Token 指定独立的 HTTP/SOCKS 代理，覆盖全局代理配置。</p>
+        </div>
         <div class="flex justify-end gap-2 pt-2">
           <button onclick="closeEditModal()" class="geist-button-outline text-xs px-3" data-i18n="common.cancel">取消</button>
           <button onclick="saveEdit()" class="geist-button text-xs px-3" data-i18n="common.save">保存</button>

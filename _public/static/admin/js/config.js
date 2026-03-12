@@ -174,6 +174,19 @@ const LOCALE_MAP = {
     "concurrent": { title: "并发上限", desc: "批量刷新用量时的并发请求上限。推荐 10。" },
     "batch_size": { title: "批次大小", desc: "批量刷新用量的单批处理数量。推荐 50。" },
     "timeout": { title: "请求超时", desc: "用量查询接口的超时时间（秒）。推荐 60。" }
+  },
+
+
+  "s3": {
+    "label": "S3 存储配置",
+    "enabled": { title: "启用 S3", desc: "是否启用 S3 兼容存储（支持 AWS S3、MinIO、Cloudflare R2 等）。" },
+    "endpoint_url": { title: "Endpoint URL", desc: "S3 兼容服务端点地址（MinIO、R2 等需要填写，AWS S3 留空即可）。" },
+    "access_key_id": { title: "Access Key ID", desc: "S3 访问密钥 ID。" },
+    "secret_access_key": { title: "Secret Access Key", desc: "S3 访问密钥。" },
+    "bucket": { title: "Bucket 名称", desc: "S3 存储桶名称。" },
+    "region": { title: "区域", desc: "S3 存储桶所在区域（如 us-east-1）。" },
+    "prefix": { title: "路径前缀", desc: "上传对象的路径前缀（如 grok2api）。" },
+    "custom_domain": { title: "自定义域名", desc: "自定义 CDN 或访问域名（如 https://cdn.example.com），留空则使用默认 S3 URL。" }
   }
 };
 
@@ -513,7 +526,7 @@ function buildFieldCard(section, key, val) {
     built = buildJsonInput(section, key, val);
   }
   else {
-    if (key === 'api_key' || key === 'app_key' || key === 'function_key') {
+    if (key === 'api_key' || key === 'app_key' || key === 'function_key' || key === 'access_key_id' || key === 'secret_access_key') {
       built = buildSecretInput(section, key, val);
     } else {
       built = buildTextInput(section, key, val);

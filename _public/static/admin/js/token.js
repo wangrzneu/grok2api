@@ -152,6 +152,7 @@ function processTokens(data) {
             status: t.status || 'active',
             quota: t.quota || 0,
             note: t.note || '',
+            proxy_url: t.proxy_url || '',
             fail_count: t.fail_count || 0,
             use_count: t.use_count || 0,
             tags: t.tags || [],
@@ -298,7 +299,12 @@ function renderTable() {
     // Note (Left)
     const tdNote = document.createElement('td');
     tdNote.className = 'text-left text-gray-500 text-xs truncate max-w-[150px]';
-    tdNote.innerText = item.note || '-';
+    if (item.proxy_url) {
+      const proxyTag = `<span class="badge badge-blue" title="${escapeHtml(item.proxy_url)}">proxy</span> `;
+      tdNote.innerHTML = proxyTag + escapeHtml(item.note || '-');
+    } else {
+      tdNote.innerText = item.note || '-';
+    }
 
     // Actions (Center)
     const tdActions = document.createElement('td');
@@ -503,6 +509,7 @@ function openEditModal(index) {
     byId('edit-pool').value = item.pool;
     byId('edit-quota').value = item.quota;
     byId('edit-note').value = item.note;
+    byId('edit-proxy-url').value = item.proxy_url || '';
     document.querySelector('#edit-modal h3').innerText = t('token.editTitle');
   } else {
     // New Token
@@ -517,6 +524,7 @@ function openEditModal(index) {
     byId('edit-pool').value = 'ssoBasic';
     byId('edit-quota').value = getDefaultQuotaForPool('ssoBasic');
     byId('edit-note').value = '';
+    byId('edit-proxy-url').value = '';
     document.querySelector('#edit-modal h3').innerText = t('token.addTitle');
   }
 
@@ -550,6 +558,7 @@ async function saveEdit() {
   const newPool = byId('edit-pool').value.trim();
   const newQuota = parseInt(byId('edit-quota').value) || 0;
   const newNote = byId('edit-note').value.trim().slice(0, 50);
+  const newProxyUrl = (byId('edit-proxy-url').value || '').trim();
 
   if (currentEditIndex >= 0) {
     // Updating existing
@@ -560,6 +569,7 @@ async function saveEdit() {
     item.pool = newPool || 'ssoBasic';
     item.quota = newQuota;
     item.note = newNote;
+    item.proxy_url = newProxyUrl || null;
   } else {
     // Creating new
     token = byId('edit-token-display').value.trim();
@@ -575,6 +585,7 @@ async function saveEdit() {
       pool: newPool || 'ssoBasic',
       quota: newQuota,
       note: newNote,
+      proxy_url: newProxyUrl || null,
       status: 'active', // default
       use_count: 0,
       _selected: false
@@ -669,6 +680,7 @@ async function syncToServer() {
       status: t.status,
       quota: t.quota,
       note: t.note,
+      proxy_url: t.proxy_url || null,
       fail_count: t.fail_count,
       use_count: t.use_count || 0,
       tags: Array.isArray(t.tags) ? t.tags : []
