@@ -472,9 +472,10 @@ class ImageWSBaseProcessor(BaseProcessor):
         raw_bytes = base64.b64decode(data)
 
         # Try S3 upload first
-        s3_url = await upload_to_s3(raw_bytes, filename, ext=ext)
-        if s3_url:
-            return s3_url
+        if get_config("s3.enabled"):
+            s3_url = await upload_to_s3(raw_bytes, filename, ext=ext)
+            if s3_url:
+                return s3_url
 
         # Fallback to local file storage
         image_dir = self._ensure_image_dir()
